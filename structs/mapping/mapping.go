@@ -41,6 +41,10 @@ type Filtering struct {
 		Key   string `form:"key" json:"key,omitempty"`
 		Value string `form:"value" json:"value,omitempty"`
 	} `form:"filter" json:"filter,omitempty"`
+	ArrayFilter []struct {
+		Key   string   `form:"key" json:"key,omitempty"`
+		Value []string `form:"value" json:"value,omitempty"`
+	} `form:"array_filter" json:"array_filter,omitempty"`
 	Sort   string `form:"sort" json:"sort,omitempty"`
 	SortBy string `form:"sort_by" json:"sort_by,omitempty"`
 }

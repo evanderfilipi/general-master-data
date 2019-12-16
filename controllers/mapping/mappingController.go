@@ -234,7 +234,7 @@ func (idb *InDB) GetListByFilter(c *gin.Context) {
 		Joins("JOIN tm_districts ON tn_provinceregencycitydistricts.district_id = tm_districts.id")
 
 	searchable := [3]string{"tm_provinces.name", "tm_regencies.name", "tm_districts.name"}
-	fmt.Println(searchable[0])
+	fmt.Println(searchable)
 
 	if fils.Keyword != "" {
 		// for sc := 0; sc < len(searchable); sc++ {
@@ -245,6 +245,12 @@ func (idb *InDB) GetListByFilter(c *gin.Context) {
 	if fils.Filter != nil {
 		for k := 0; k < len(fils.Filter); k++ {
 			db = db.Where(fils.Filter[k].Key+" = ?", fils.Filter[k].Value)
+		}
+	}
+
+	if fils.ArrayFilter != nil {
+		for m := 0; m < len(fils.ArrayFilter); m++ {
+			db = db.Where(fils.ArrayFilter[m].Key+" IN (?)", fils.ArrayFilter[m].Value)
 		}
 	}
 
