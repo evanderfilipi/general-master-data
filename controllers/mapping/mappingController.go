@@ -3,10 +3,13 @@ package mapping
 import (
 	// "net/http"
 	"fmt"
+	"strings"
+
 	// "io/ioutil"
 	// "../../structs/provinces"
 	// "../../structs/regencies"
 	// "../../structs/districts"
+	"../../handler"
 	"../../helper"
 	"../../structs/mapping"
 	"github.com/gin-gonic/gin"
@@ -218,23 +221,29 @@ func (idb *InDB) GetList(c *gin.Context) {
 
 func (idb *InDB) GetListByFilter(c *gin.Context) {
 	var (
-		fils    mapping.Filtering
-		res     helper.Response
-		set     Set
-		records int
+		fils        mapping.Filtering
+		res         helper.Response
+		set         Set
+		records     int
+		selectItems string
 	)
 
 	// id := c.Param("id")
 	c.ShouldBindJSON(&fils)
 
-	selectItems := "tn_provinceregencycitydistricts.id, tm_provinces.id, tm_provinces.name, tm_regencies.id, tm_regencies.name, tm_districts.id, tm_districts.name"
+	// selectItems := "tn_provinceregencycitydistricts.id, tm_provinces.id, tm_provinces.name, tm_regencies.id, tm_regencies.name, tm_districts.id, tm_districts.name"
 	db := idb.DB.Table("tn_provinceregencycitydistricts").
 		Joins("JOIN tm_provinces ON tn_provinceregencycitydistricts.province_id = tm_provinces.id").
 		Joins("JOIN tm_regencies ON tn_provinceregencycitydistricts.regency_city_id = tm_regencies.id").
 		Joins("JOIN tm_districts ON tn_provinceregencycitydistricts.district_id = tm_districts.id")
 
 	searchable := [3]string{"tm_provinces.name", "tm_regencies.name", "tm_districts.name"}
-	fmt.Println(searchable)
+
+	if fils.Fields != nil {
+		selectItems = strings.Join(fils.Fields, ",")
+	} else {
+		selectItems = "tn_provinceregencycitydistricts.id as mapping_id, tm_provinces.id as province_id, tm_provinces.name as province_name, tm_regencies.id as regency_city_id, tm_regencies.name as regency_city_name, tm_districts.id as dictrict_id, tm_districts.name as dictrict_name"
+	}
 
 	if fils.Keyword != "" {
 		// for sc := 0; sc < len(searchable); sc++ {
@@ -273,29 +282,45 @@ func (idb *InDB) GetListByFilter(c *gin.Context) {
 		set.Next = fils.Page + 1
 	}
 
+	fmt.Println(selectItems)
 	data, err := db.Select(selectItems).Rows()
 	if err != nil {
 		msg := err.Error()
 		helper.ErrorCustomStatus(400, msg, c)
 	}
-	// fmt.Println(data.Columns())
+
+	columns, errs := data.Columns()
+	if errs != nil {
+		msg := errs.Error()
+		helper.ErrorCustomStatus(400, msg, c)
+	}
+	length := len(columns)
+	result := make([]map[string]interface{}, 0)
+
 	defer data.Close()
 
-	datas := []mapping.Mapped{}
+	// datas := []mapping.Mapped{}
 	// dis := []mapping.District{}
 	// var maps mapping.Mapped
 
 	for data.Next() {
-		var mapped mapping.Mapped
-		err := data.Scan(&mapped.MappingId, &mapped.ProvinceId, &mapped.ProvinceName, &mapped.RegencyId, &mapped.RegencyName, &mapped.DistrictId, &mapped.DistrictName)
-		if err != nil {
+		// var mapped mapping.Mapped
+		// err := data.Scan(&mapped.MappingId, &mapped.ProvinceId, &mapped.ProvinceName, &mapped.RegencyId, &mapped.RegencyName, &mapped.DistrictId, &mapped.DistrictName)
+		// if err != nil {
+		// 	msg := err.Error()
+		// 	helper.ErrorCustomStatus(400, msg, c)
+		// }
+		// datas = append(datas, mapped)
+		current := handler.MakeResultReceiver(length)
+		if err := data.Scan(current...); err != nil {
 			msg := err.Error()
 			helper.ErrorCustomStatus(400, msg, c)
 		}
-		datas = append(datas, mapped)
+		value := handler.ScanResult(length, current, columns)
+		result = append(result, value)
 	}
 	set.Records = records
-	set.Results = datas
+	set.Results = result
 
 	res.Error = false
 	res.Code = 200

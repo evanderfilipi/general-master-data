@@ -23,7 +23,8 @@ type MappingData []struct {
 }
 
 type Filtering struct {
-	Keyword    string `form:"keyword" json:"keyword,omitempty"`
+	Fields     []string `form:"fields" json:"fields,omitempty"`
+	Keyword    string   `form:"keyword" json:"keyword,omitempty"`
 	DateFilter []struct {
 		Key   string `form:"key" json:"key,omitempty"`
 		Value struct {
@@ -50,13 +51,13 @@ type Filtering struct {
 }
 
 type Mapped struct {
-	MappingId    int64 `json:",omitempty"`
-	ProvinceId   int64
-	ProvinceName string
-	RegencyId    int64
-	RegencyName  string
-	DistrictId   int64
-	DistrictName string
+	MappingId    int64  `json:",omitempty"`
+	ProvinceId   int64  `json:",omitempty"`
+	ProvinceName string `json:",omitempty"`
+	RegencyId    int64  `json:",omitempty"`
+	RegencyName  string `json:",omitempty"`
+	DistrictId   int64  `json:",omitempty"`
+	DistrictName string `json:",omitempty"`
 }
 
 type InputData struct {

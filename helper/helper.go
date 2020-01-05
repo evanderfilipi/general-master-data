@@ -2,6 +2,7 @@ package helper
 
 import (
 	"net/http"
+	"reflect"
 	"regexp"
 	"strconv"
 	"time"
@@ -172,4 +173,30 @@ func TimestampToDate(tmp int64) interface{} {
 func Int64ToString(str int64) string {
 	strings := strconv.FormatInt(int64(str), 10)
 	return strings
+}
+
+func IsArray(array interface{}) bool {
+	arr := reflect.ValueOf(array)
+
+	if arr.Kind() != reflect.Array {
+		return false
+	}
+
+	return true
+}
+
+func InArray(array interface{}, item interface{}) bool {
+	arr := reflect.ValueOf(array)
+
+	if arr.Kind() != reflect.Array {
+		panic("Tipe data yang diinput harus array!")
+	}
+
+	for i := 0; i < arr.Len(); i++ {
+		if arr.Index(i).Interface() == item {
+			return true
+		}
+	}
+
+	return false
 }
